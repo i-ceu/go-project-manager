@@ -9,4 +9,5 @@ type User struct {
 	Email     string `json:"email" gorm:"unique;not null"`
 	Password  string `json:"password" gorm:"not null"`
 	Role      string `json:"role" gorm:"default:user"`
+	// Tasks     []Task `json:"assignedTasks"`
 }

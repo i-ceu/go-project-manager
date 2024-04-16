@@ -62,7 +62,7 @@ func GetProject(c *gin.Context) {
 	id := c.Param("id")
 	var project models.Project
 
-	result := config.DB.Preload("Tasks.Project").Preload("Tasks.Assignee").Preload("Tasks.AssignedTo").Preload("Tasks").First(&project, id)
+	result := config.DB.Preload("Tasks.Project").Preload("Tasks.Assigner").Preload("Tasks.AssignedTo").Preload("Tasks").First(&project, id)
 	if result.Error != nil {
 		c.JSON(404, gin.H{
 			"message": "No project found with this Id",

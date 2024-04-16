@@ -97,7 +97,7 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	token, err := createJWT(int64(user.ID))
+	token, err := createJWT(int64(user.ID), user.Role)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -110,10 +110,11 @@ func SignIn(c *gin.Context) {
 
 }
 
-func createJWT(userID int64) (string, error) {
+func createJWT(userID int64, role string) (string, error) {
 	secret := []byte(os.Getenv("jwtSecret"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID":    strconv.Itoa(int(userID)),
+		"role":      role,
 		"expiresAt": time.Now().Add(time.Hour * 24 * 120).Unix(),
 	})
 

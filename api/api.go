@@ -23,7 +23,9 @@ func RegisterRoutes() {
 		tasks.Use(middleware.AuthMiddleware())
 		{
 			tasks.POST("/", controllers.CreateTask)
-			tasks.GET("/:id", controllers.GetTasks)
+			tasks.PUT("/assignTask/:id", controllers.AssignTask)
+			tasks.PUT("/updateTask/:id", controllers.UpdateTask)
+			tasks.GET("/:id", controllers.GetTask)
 		}
 		projects := v1.Group("/projects")
 		projects.Use(middleware.AuthMiddleware())
