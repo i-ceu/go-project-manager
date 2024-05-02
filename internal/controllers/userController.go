@@ -11,31 +11,38 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ubaniIsaac/go-project-manager/internal/config"
+	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
+	"github.com/ubaniIsaac/go-project-manager/internal/mails"
 	"github.com/ubaniIsaac/go-project-manager/internal/models"
 )
 
 func Register(c *gin.Context) {
 	var req struct {
-		FirstName       string
-		LastName        string
-		Email           string
-		Password        string
-		ConfirmPassword string
+		FirstName       string `validate:"required"`
+		LastName        string `validate:"required"`
+		Email           string `validate:"required,email"`
+		Password        string `validate:"required"`
+		ConfirmPassword string `validate:"required"`
 		Role            string
 	}
 
 	c.Bind(&req)
-	// fmt.Println(c.PostForm("password"))
-	// fmt.Println(c.PostForm("confirmPassword"))
+	err := helpers.ValidateReq(req)
+	if err != nil {
+		c.JSON(422, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	if req.Password != req.ConfirmPassword {
 		c.JSON(422, gin.H{
-			"message": "Password and Confrim password dont match",
+			"message": "Password and Confirm password dont match",
 		})
 		return
 	}
 	var existingUser models.User
-	email := config.DB.Where("email = ?", req.Email).First(&existingUser)
-	// fmt.Println(email)
+	email := config.DB.Find(&existingUser, "email = ?", req.Email)
 	if email.RowsAffected > 0 {
 		c.JSON(403, gin.H{
 			"message": "Account exists with this email",
@@ -59,26 +66,36 @@ func Register(c *gin.Context) {
 
 	result := config.DB.Create(&user)
 	if result.Error != nil {
-		// c.Status(400)
 		c.JSON(400, gin.H{
 			"message": result,
 		})
 		return
 	}
 
+	go mails.SendWelcomeMail(
+		user.Email,
+		"Welcome to GOPM",
+		req.FirstName+" "+req.LastName)
+
 	c.JSON(201, gin.H{
 		"message": "User registered succefully",
 		"User":    user,
 	})
-	// return
 }
 
 func SignIn(c *gin.Context) {
 	var req struct {
-		Email    string
-		Password string
+		Email    string `validate:"required,email"`
+		Password string `validate:"required"`
 	}
 	c.Bind(&req)
+	err := helpers.ValidateReq(req)
+	if err != nil {
+		c.JSON(422, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
 	var user models.User
 	existingUser := config.DB.Where("email = ?", req.Email).First(&user)
 
@@ -89,14 +106,13 @@ func SignIn(c *gin.Context) {
 
 	}
 	//compare password hash
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		c.JSON(401, gin.H{
 			"message": "Invalid credentials",
 		})
 		return
 	}
-
 	token, err := createJWT(int64(user.ID), user.Role)
 	if err != nil {
 		log.Fatal(err)
@@ -113,11 +129,10 @@ func SignIn(c *gin.Context) {
 func createJWT(userID int64, role string) (string, error) {
 	secret := []byte(os.Getenv("jwtSecret"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userID":    strconv.Itoa(int(userID)),
-		"role":      role,
-		"expiresAt": time.Now().Add(time.Hour * 24 * 120).Unix(),
+		"role":   role,
+		"userID": strconv.Itoa(int(userID)),
+		"exp":    time.Now().Add(time.Hour * 24 * 120).Unix(),
 	})
-
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
 		return "", err

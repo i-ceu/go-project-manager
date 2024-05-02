@@ -9,10 +9,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func Auth() gin.HandlerFunc {
 
 	var secret = []byte(os.Getenv("jwtSecret"))
-	var claims = jwt.MapClaims{}
+	type MyClaims struct {
+		Role   string `json:"role"`
+		UserID string `json:"userID"`
+		jwt.RegisteredClaims
+	}
 
 	return func(c *gin.Context) {
 		// Get the authorization header
@@ -37,7 +41,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := parts[1]
 
 		// Parse and validate the JWT token
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return secret, nil
 		})
 		if err != nil || !token.Valid {
@@ -47,16 +51,27 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// Set the user ID from the token claims into the request context for further processing
-		claims, ok := token.Claims.(jwt.MapClaims)
+		claims, ok := token.Claims.(*MyClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to extract token claims"})
 			c.Abort()
+		}
+
+		c.Set("userID", claims.UserID)
+		c.Set("role", claims.Role)
+
+		c.Next()
+	}
+}
+
+func CheckRole(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole, _ := c.Get("role")
+		if userRole != role {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+			c.Abort()
 			return
 		}
-		c.Set("userID", claims["userID"])
-		c.Set("role", claims["role"])
-
-		// Continue to the next handler
 		c.Next()
 	}
 }

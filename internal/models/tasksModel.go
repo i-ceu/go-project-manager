@@ -7,15 +7,16 @@ import (
 )
 
 type Task struct {
-	gorm.Model
+	gorm.Model   `json:"-"`
 	Title        string    `json:"title"`
+	Tag          string    `json:"tag" gorm:"not null"`
 	Description  string    `json:"description"`
 	Status       string    `json:"status" gorm:"default: todo"`
 	DueDate      time.Time `json:"dueDate"`
-	ProjectID    int       `json:"projectId"`
+	ProjectID    int       `json:"-"`
 	Project      Project   `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignerID   int       `json:"assignerId"`
+	AssignerID   int       `json:"-"`
 	Assigner     User      `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignedToID int       `json:"assignedToId" gorm:"default: 1"`
+	AssignedToID int       `json:"-" gorm:"default: 1"`
 	AssignedTo   User      `gorm:"constraint:OnDelete:SET NULL;"`
 }

@@ -20,17 +20,19 @@ func RegisterRoutes() {
 		}
 
 		tasks := v1.Group("/tasks")
-		tasks.Use(middleware.AuthMiddleware())
+		tasks.Use(middleware.Auth())
 		{
-			tasks.POST("/", controllers.CreateTask)
+			tasks.POST("/", middleware.CheckRole("PM"), controllers.CreateTask)
 			tasks.PUT("/assignTask/:id", controllers.AssignTask)
 			tasks.PUT("/updateTask/:id", controllers.UpdateTask)
 			tasks.GET("/:id", controllers.GetTask)
 		}
+
 		projects := v1.Group("/projects")
-		projects.Use(middleware.AuthMiddleware())
+		projects.Use(middleware.Auth())
 		{
-			projects.POST("/", controllers.CreateProject)
+			projects.GET("/", controllers.GetAllProjects)
+			projects.POST("/", middleware.CheckRole("PM"), controllers.CreateProject)
 			projects.GET("/:id", controllers.GetProject)
 		}
 	}

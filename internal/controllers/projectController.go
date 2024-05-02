@@ -5,20 +5,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ubaniIsaac/go-project-manager/internal/config"
+	"github.com/ubaniIsaac/go-project-manager/internal/enums"
+	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
 	"github.com/ubaniIsaac/go-project-manager/internal/models"
 )
 
 func CreateProject(c *gin.Context) {
-
 	var req struct {
-		Title        string
-		Description  string
+		Title        string `validate:"required"`
+		Tag          string `validate:"required"`
+		Description  string `validate:"required"`
 		Status       string
-		DeliveryDate string
+		DeliveryDate string `validate:"required"`
 	}
 	c.Bind(&req)
-
-	dueDate, err := time.Parse("2006-01-02", req.DeliveryDate)
+	err := helpers.ValidateReq(req)
+	if err != nil {
+		c.JSON(422, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	dueDate, err := time.Parse(enums.Date_format, req.DeliveryDate)
 	if err != nil {
 		c.JSON(422, gin.H{
 			"message": "Invalid date format",
@@ -28,21 +36,16 @@ func CreateProject(c *gin.Context) {
 
 	project := models.Project{
 		Title:        req.Title,
+		Tag:          req.Tag,
 		Description:  req.Description,
 		Status:       req.Status,
 		DeliveryDate: dueDate,
 	}
-	var result struct {
-		Title        string `json:"title"`
-		Description  string `json:"description"`
-		Status       string `json:"status"`
-		DeliveryDate string `json:"deliveryDate"`
-	}
 
-	test := config.DB.Create(&project).Scan(&result)
+	test := config.DB.Create(&project)
 	if test.Error != nil {
 		c.JSON(400, gin.H{
-			"message": test,
+			"message": test.Error,
 		})
 		return
 	}
@@ -50,6 +53,7 @@ func CreateProject(c *gin.Context) {
 		"message": "New Project Created",
 		"Project": gin.H{
 			"Title":        project.Title,
+			"Tag":          project.Tag,
 			"Description":  project.Description,
 			"Status":       project.Status,
 			"DeliveryDate": project.DeliveryDate,
@@ -73,4 +77,24 @@ func GetProject(c *gin.Context) {
 		"project": project,
 	})
 
+}
+
+func GetAllProjects(c *gin.Context) {
+	var projects []models.Project
+
+	result := config.DB.Find(&projects)
+	if result.Error != nil {
+		c.JSON(404, gin.H{
+			"message": "Error retrieving projects",
+		})
+		return
+	}
+	c.JSON(200, gin.H{
+		"projects": projects,
+	})
+
+}
+
+func GetProjectTasks(c *gin.Context){
+	
 }
