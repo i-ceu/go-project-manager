@@ -1,4 +1,4 @@
-package api
+package routes
 
 import (
 	"github.com/gin-gonic/gin"
@@ -15,8 +15,16 @@ func RegisterRoutes() {
 		//auth routes
 		auth := v1.Group("/auth")
 		{
-			auth.POST("/register", controllers.Register)
+			auth.POST("/registerUser", controllers.RegisterUser)
+			auth.POST("/registerOrganization", controllers.RegisterOrganization)
 			auth.POST("/signin", controllers.SignIn)
+		}
+
+		//organization
+		organization := v1.Group("/organization")
+		organization.Use(middleware.Auth())
+		{
+			organization.POST("/invite/:id", controllers.InviteToOrganiztion)
 		}
 
 		tasks := v1.Group("/tasks")

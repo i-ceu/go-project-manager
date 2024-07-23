@@ -3,12 +3,24 @@ package helpers
 import (
 	"bytes"
 	"html/template"
+	"log"
 	"os"
 
 	"github.com/go-mail/mail"
 )
 
-func DeliverMail(tpl bytes.Buffer, recipient string, subject string) error {
+func DeliverMail(
+	templateFile string,
+	values interface{},
+	recipient string,
+	subject string) error {
+
+	var tpl bytes.Buffer
+	if err := parseTemplate(templateFile, &tpl, values); err != nil {
+		log.Fatalf("Failed to parse and execute template: %v", err)
+		return err
+	}
+
 	m := mail.NewMessage()
 
 	m.SetHeader("From", os.Getenv("app_mail"))
@@ -22,19 +34,20 @@ func DeliverMail(tpl bytes.Buffer, recipient string, subject string) error {
 	d := mail.NewDialer(os.Getenv("smtpHost"), 2525, os.Getenv("username"), os.Getenv("password"))
 
 	if err := d.DialAndSend(m); err != nil {
+		log.Fatalf("Failed to deliver mail: %v", err)
 		return err
 	}
 	return nil
 }
 
-func ParseTemplate(templateFile string, tpl *bytes.Buffer, values interface{}) error {
+func parseTemplate(templateFile string, tpl *bytes.Buffer, values interface{}) error {
 	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
 		return err
 	}
 
 	if err := tmpl.Execute(tpl, values); err != nil {
-		return err
+		log.Fatalf("Failed to parse and execute template: %v", err)
 	}
 
 	return nil

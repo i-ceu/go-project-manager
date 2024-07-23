@@ -16,13 +16,13 @@ import (
 	"github.com/ubaniIsaac/go-project-manager/internal/models"
 )
 
-func Register(c *gin.Context) {
+func RegisterUser(c *gin.Context) {
 	var req struct {
 		FirstName       string `validate:"required"`
 		LastName        string `validate:"required"`
 		Email           string `validate:"required,email"`
 		Password        string `validate:"required"`
-		ConfirmPassword string `validate:"required"`
+		ConfirmPassword string `validate:"required,eqfield=Password"`
 		Role            string
 	}
 
@@ -35,19 +35,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if req.Password != req.ConfirmPassword {
-		c.JSON(422, gin.H{
-			"message": "Password and Confirm password dont match",
-		})
-		return
-	}
 	var existingUser models.User
 	email := config.DB.Find(&existingUser, "email = ?", req.Email)
 	if email.RowsAffected > 0 {
 		c.JSON(403, gin.H{
 			"message": "Account exists with this email",
 		})
-		return
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -62,6 +55,7 @@ func Register(c *gin.Context) {
 		Lastname:  req.LastName,
 		Email:     req.Email,
 		Password:  string(hashPassword),
+		Role:      req.Role,
 	}
 
 	result := config.DB.Create(&user)
@@ -126,12 +120,16 @@ func SignIn(c *gin.Context) {
 
 }
 
+// func AcceptInvite(c *gin.Context)  {
+
+// }
+
 func createJWT(userID int64, role string) (string, error) {
 	secret := []byte(os.Getenv("jwtSecret"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"role":   role,
 		"userID": strconv.Itoa(int(userID)),
-		"exp":    time.Now().Add(time.Hour * 24 * 120).Unix(),
+		"exp":    time.Now().Add(time.Hour * 24 * 10).Unix(),
 	})
 	tokenString, err := token.SignedString(secret)
 	if err != nil {

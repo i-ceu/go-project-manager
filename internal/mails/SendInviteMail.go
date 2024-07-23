@@ -6,22 +6,24 @@ import (
 	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
 )
 
-func SendWelcomeMail(
+func SendInviteMail(
 	recipient string,
 	subject string,
-	name string) error {
+	organizationName string,
+	link string) error {
 	values := struct {
-		Name string
+		OrganizationName string
+		Link             string
 	}{
-		Name: name,
+		OrganizationName: organizationName,
+		Link:             link,
 	}
 
-	templateFile := "../../internal/templates/welcome.html"
-
+	templateFile := "../../internal/templates/invite.html"
 	err := helpers.DeliverMail(templateFile, values, recipient, subject)
 	if err != nil {
 		log.Fatalf("Failed to deliver mail: %v", err)
-	}
 
+	}
 	return nil
 }

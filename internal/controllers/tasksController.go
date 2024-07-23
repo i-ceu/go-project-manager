@@ -204,11 +204,10 @@ func UpdateTask(c *gin.Context) {
 
 }
 
-
 func checkTask(task *models.Task, id int) error {
 	result := config.DB.Preload(clause.Associations).Find(&task, id)
 	if result.RowsAffected == 0 {
-		return errors.New("no task with thi ID")
+		return errors.New("no task with this ID")
 	}
 	return nil
 }

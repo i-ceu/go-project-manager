@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ubaniIsaac/go-project-manager/api"
 	"github.com/ubaniIsaac/go-project-manager/internal/config"
+	"github.com/ubaniIsaac/go-project-manager/internal/routes"
 )
 
 func init() {
@@ -11,5 +11,5 @@ func init() {
 }
 
 func main() {
-	api.RegisterRoutes()
+	routes.RegisterRoutes()
 }
