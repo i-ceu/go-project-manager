@@ -2,21 +2,21 @@ package controllers
 
 import (
 	"encoding/base64"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/ubaniIsaac/go-project-manager/internal/config"
 	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
 	"github.com/ubaniIsaac/go-project-manager/internal/mails"
 	"github.com/ubaniIsaac/go-project-manager/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func RegisterOrganization(c *gin.Context) {
 	var req struct {
 		Name            string `validate:"required"`
 		Email           string `validate:"required,email"`
+		Size            string `validate:"required,is-valid-organization-size"`
+		Industry        string `validate:"required,is-valid-industry"`
 		Password        string `validate:"required"`
 		ConfirmPassword string `validate:"required,eqfield=Password"`
 	}
@@ -39,17 +39,11 @@ func RegisterOrganization(c *gin.Context) {
 		return
 	}
 
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"message": "error",
-		})
-		return
-	}
 	organization := models.Organization{
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: string(hashPassword),
+		Size:     req.Size,
+		Industry: req.Industry,
 	}
 
 	result := config.DB.Create(&organization)
@@ -77,7 +71,7 @@ func InviteToOrganiztion(c *gin.Context) {
 		Role  string `validate:"required"`
 	}
 	c.Bind(&req)
-	organizationId, _ := strconv.Atoi(c.Param("id"))
+	organizationId := c.Param("id")
 
 	err := helpers.ValidateReq(req)
 	if err != nil {
@@ -119,7 +113,7 @@ func InviteToOrganiztion(c *gin.Context) {
 
 	b64 := string(base64.StdEncoding.EncodeToString([]byte(string(token))))
 
-	config.DB.Create(&models.Token{UserId: int(user.ID), Token: token})
+	config.DB.Create(&models.Token{UserId: user.ID, Token: token})
 	var org models.Organization
 	result = config.DB.First(&org, organizationId)
 	if result.Error != nil {

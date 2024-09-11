@@ -21,9 +21,9 @@ func CreateTask(c *gin.Context) {
 		Description string `validate:"required"`
 		DueDate     string `validate:"required"`
 		Status      string
-		Assigner    int64
-		Project     int64 `validate:"required"`
-		AssignedTo  int64
+		Assigner    string
+		Project     string `validate:"required"`
+		AssignedTo  string
 	}
 	c.Bind(&req)
 	err := helpers.ValidateReq(req)
@@ -35,7 +35,7 @@ func CreateTask(c *gin.Context) {
 	}
 
 	var project models.Project
-	err = checkProject(&project, int(req.Project))
+	err = checkProject(&project, req.Project)
 	if err != nil {
 		c.JSON(404, gin.H{
 			"message": "No Project with Id",
@@ -44,7 +44,7 @@ func CreateTask(c *gin.Context) {
 	}
 	tag := generateTaskTag(&project, 0)
 
-	userID, _ := strconv.Atoi(c.MustGet("userID").(string))
+	userID, _ := c.MustGet("userID").(string)
 	dueDate, err := time.Parse("enums.Date_format", req.DueDate)
 	if err != nil {
 		c.JSON(422, gin.H{
@@ -59,9 +59,9 @@ func CreateTask(c *gin.Context) {
 		Description:  req.Description,
 		Status:       req.Status,
 		DueDate:      dueDate,
-		ProjectID:    int(req.Project),
+		ProjectID:    req.Project,
 		AssignerID:   userID,
-		AssignedToID: int(req.AssignedTo),
+		AssignedToID: req.AssignedTo,
 	}
 
 	newTask := config.DB.Create(&task)
@@ -80,7 +80,7 @@ func CreateTask(c *gin.Context) {
 	})
 }
 func GetTask(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	var task models.Task
 
 	err := checkTask(&task, id)
@@ -97,7 +97,7 @@ func GetTask(c *gin.Context) {
 
 func AssignTask(c *gin.Context) {
 	var req struct {
-		AssignedTo int64
+		AssignedTo string
 	}
 	c.Bind(&req)
 	err := helpers.ValidateReq(req)
@@ -107,7 +107,7 @@ func AssignTask(c *gin.Context) {
 		})
 		return
 	}
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	var task models.Task
 	var user models.User
 
@@ -119,7 +119,7 @@ func AssignTask(c *gin.Context) {
 		return
 	}
 
-	err = checkUser(&user, int(req.AssignedTo))
+	err = checkUser(&user, req.AssignedTo)
 	if err != nil {
 		c.JSON(404, gin.H{
 			"message": "No User with Id",
@@ -162,7 +162,7 @@ func UpdateTask(c *gin.Context) {
 		})
 		return
 	}
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 
 	var task models.Task
 	err = checkTask(&task, id)
@@ -204,21 +204,21 @@ func UpdateTask(c *gin.Context) {
 
 }
 
-func checkTask(task *models.Task, id int) error {
+func checkTask(task *models.Task, id string) error {
 	result := config.DB.Preload(clause.Associations).Find(&task, id)
 	if result.RowsAffected == 0 {
 		return errors.New("no task with this ID")
 	}
 	return nil
 }
-func checkProject(project *models.Project, id int) error {
+func checkProject(project *models.Project, id string) error {
 	result := config.DB.Preload("Tasks").Find(&project, id)
 	if result.RowsAffected == 0 {
 		return errors.New("No project with this ID")
 	}
 	return nil
 }
-func checkUser(user *models.User, id int) error {
+func checkUser(user *models.User, id string) error {
 	result := config.DB.Find(&user, id)
 	if result.RowsAffected == 0 {
 		return errors.New("now user with id")

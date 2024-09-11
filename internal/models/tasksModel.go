@@ -2,21 +2,19 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Task struct {
-	gorm.Model   `json:"-"`
+	Base
 	Title        string    `json:"title"`
 	Tag          string    `json:"tag" gorm:"not null"`
 	Description  string    `json:"description"`
 	Status       string    `json:"status" gorm:"default: todo"`
 	DueDate      time.Time `json:"dueDate"`
-	ProjectID    int       `json:"-"`
+	ProjectID    string    `json:"-"`
 	Project      Project   `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignerID   int       `json:"-"`
+	AssignerID   string    `json:"-"`
 	Assigner     User      `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignedToID int       `json:"-" gorm:"default: 1"`
+	AssignedToID string    `json:"-" gorm:"default: 1"`
 	AssignedTo   User      `gorm:"constraint:OnDelete:SET NULL;"`
 }

@@ -5,17 +5,18 @@ import (
 	"github.com/ubaniIsaac/go-project-manager/internal/models"
 )
 
-func CreateUserOrganizationRoleTable() {
-	type UserOrganizationRole struct {
-		UserID         int
+func CreateStaffRoleTable() {
+	type StaffRole struct {
+		models.Base
+		UserID         string
 		User           models.User `gorm:"constraint:OnDelete:SET NULL; foreignKey:UserID;references:ID"`
-		RoleID         int
+		RoleID         string
 		Role           models.Role `gorm:"constraint:OnDelete:SET NULL; foreignKey:RoleID;references:ID"`
-		OrganizationID int
+		OrganizationID string
 		Organization   models.Organization `gorm:"constraint:OnDelete:SET NULL; foreignKey:OrganizationID;references:ID"`
 	}
 
-	if !config.DB.Migrator().HasTable(&UserOrganizationRole{}) {
-		config.DB.Migrator().CreateTable(&UserOrganizationRole{})
+	if !config.DB.Migrator().HasTable(&StaffRole{}) {
+		config.DB.Migrator().CreateTable(&StaffRole{})
 	}
 }

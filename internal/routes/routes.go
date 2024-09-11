@@ -3,12 +3,20 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/ubaniIsaac/go-project-manager/internal/controllers"
+	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
 	"github.com/ubaniIsaac/go-project-manager/internal/middleware"
 )
 
 //list all api routes from
 
 func RegisterRoutes() {
+
+	logFile := helpers.SetupLogging()
+	defer logFile.Close()
+
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = logFile
+
 	r := gin.Default()
 	v1 := r.Group("/api/v1")
 	{
@@ -16,7 +24,6 @@ func RegisterRoutes() {
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/registerUser", controllers.RegisterUser)
-			auth.POST("/registerOrganization", controllers.RegisterOrganization)
 			auth.POST("/signin", controllers.SignIn)
 		}
 
@@ -25,6 +32,7 @@ func RegisterRoutes() {
 		organization.Use(middleware.Auth())
 		{
 			organization.POST("/invite/:id", controllers.InviteToOrganiztion)
+			organization.POST("/register", middleware.CheckRole("admin"), controllers.RegisterOrganization)
 		}
 
 		tasks := v1.Group("/tasks")

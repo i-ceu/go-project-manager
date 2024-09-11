@@ -2,12 +2,8 @@ package controllers
 
 import (
 	"log"
-	"os"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ubaniIsaac/go-project-manager/internal/config"
@@ -91,15 +87,21 @@ func SignIn(c *gin.Context) {
 		return
 	}
 	var user models.User
-	existingUser := config.DB.Where("email = ?", req.Email).First(&user)
+	existingUser := config.DB.Where("email", req.Email).First(&user)
 
 	if existingUser.RowsAffected == 0 {
 		c.JSON(403, gin.H{
 			"message": "Account doesn't exist",
 		})
-
+		return
 	}
-	//compare password hash
+	if user.Status != "verified" {
+		c.JSON(403, gin.H{
+			"message": "Please verify your account to login",
+		})
+		return
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		c.JSON(401, gin.H{
@@ -107,7 +109,7 @@ func SignIn(c *gin.Context) {
 		})
 		return
 	}
-	token, err := createJWT(int64(user.ID), user.Role)
+	token, err := helpers.CreateJWT(user.ID, user.Role)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,22 +120,4 @@ func SignIn(c *gin.Context) {
 		"token":   token,
 	})
 
-}
-
-// func AcceptInvite(c *gin.Context)  {
-
-// }
-
-func createJWT(userID int64, role string) (string, error) {
-	secret := []byte(os.Getenv("jwtSecret"))
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"role":   role,
-		"userID": strconv.Itoa(int(userID)),
-		"exp":    time.Now().Add(time.Hour * 24 * 10).Unix(),
-	})
-	tokenString, err := token.SignedString(secret)
-	if err != nil {
-		return "", err
-	}
-	return tokenString, err
 }
