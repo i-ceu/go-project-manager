@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/go-mail/mail"
 )
@@ -31,7 +32,9 @@ func DeliverMail(
 
 	m.SetBody("text/html", tpl.String())
 
-	d := mail.NewDialer(os.Getenv("smtpHost"), 2525, os.Getenv("username"), os.Getenv("password"))
+	port, _ := strconv.Atoi(os.Getenv("smtpport"))
+
+	d := mail.NewDialer(os.Getenv("smtpHost"), port, os.Getenv("username"), os.Getenv("password"))
 
 	if err := d.DialAndSend(m); err != nil {
 		log.Fatalf("Failed to deliver mail: %v", err)

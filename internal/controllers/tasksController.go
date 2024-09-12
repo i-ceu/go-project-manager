@@ -129,10 +129,7 @@ func AssignTask(c *gin.Context) {
 
 	result := config.DB.Model(&task).Update("AssignedTo", &user)
 	if result.Error != nil {
-		c.JSON(403, gin.H{
-			"message": "Error Updating Task",
-			"error":   result.Error,
-		})
+		helpers.ResError(c, 400, "Error Assigning Task", result.Error)
 		return
 	}
 
@@ -188,10 +185,7 @@ func UpdateTask(c *gin.Context) {
 		DueDate:     dueDate,
 		Status:      req.Status})
 	if result.Error != nil {
-		c.JSON(403, gin.H{
-			"message": "Error Updating Task",
-			"error":   result.Error,
-		})
+		helpers.ResError(c, 400, "Error Updating Task", result.Error)
 		return
 	}
 
@@ -214,7 +208,7 @@ func checkTask(task *models.Task, id string) error {
 func checkProject(project *models.Project, id string) error {
 	result := config.DB.Preload("Tasks").Find(&project, id)
 	if result.RowsAffected == 0 {
-		return errors.New("No project with this ID")
+		return errors.New("no project with this ID")
 	}
 	return nil
 }

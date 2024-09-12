@@ -6,6 +6,7 @@ type User struct {
 	Lastname  string `json:"lastName" gorm:"not null"`
 	Email     string `json:"email" gorm:"unique;not null"`
 	Password  string `json:"-" gorm:"not null"`
-	Role      string `json:"role" gorm:"default:admin"`
-	Status    string `json:"status"gorm"default:not-verified`
+	RoleID    string `json:"-"`
+	Role      Role   `gorm:"constraint:OnDelete:SET NULL; foreignKey:RoleID;references:ID"`
+	Status    string `json:"status" gorm:"default:not-verified"`
 }

@@ -1,6 +1,7 @@
 package mails
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
@@ -18,6 +19,8 @@ func SendInviteMail(
 		OrganizationName: organizationName,
 		Link:             link,
 	}
+
+	fmt.Println(link)
 
 	templateFile := "../../internal/templates/invite.html"
 	err := helpers.DeliverMail(templateFile, values, recipient, subject)

@@ -17,8 +17,8 @@ func main() {
 	config.DB.AutoMigrate(&models.Organization{})
 	config.DB.AutoMigrate(&models.Token{})
 	config.DB.AutoMigrate(&models.Role{})
+	config.DB.AutoMigrate(&models.StaffRole{})
 	config.DB.AutoMigrate(&models.Invite{})
 
 	migrations.DropOrganizationFromUsersTable()
-	migrations.CreateStaffRoleTable()
 }

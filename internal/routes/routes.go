@@ -14,7 +14,6 @@ func RegisterRoutes() {
 	logFile := helpers.SetupLogging()
 	defer logFile.Close()
 
-	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = logFile
 
 	r := gin.Default()
@@ -25,6 +24,7 @@ func RegisterRoutes() {
 		{
 			auth.POST("/registerUser", controllers.RegisterUser)
 			auth.POST("/signin", controllers.SignIn)
+			auth.POST("/acceptInvite/:id", controllers.AcceptInvite)
 		}
 
 		//organization

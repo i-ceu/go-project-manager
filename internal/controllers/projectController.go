@@ -44,9 +44,7 @@ func CreateProject(c *gin.Context) {
 
 	test := config.DB.Create(&project)
 	if test.Error != nil {
-		c.JSON(400, gin.H{
-			"message": test.Error,
-		})
+		helpers.ResError(c, 400, test.Error, nil)
 		return
 	}
 	c.JSON(201, gin.H{
@@ -95,6 +93,6 @@ func GetAllProjects(c *gin.Context) {
 
 }
 
-func GetProjectTasks(c *gin.Context){
-	
+func GetProjectTasks(c *gin.Context) {
+
 }
