@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/i-ceu/go-project-manager/internal/config"
@@ -30,9 +29,15 @@ func CreateOrganization(req *requests.CreateOrganizationRequest, user *models.Us
 		return nil, org.Error
 	}
 
+	var role models.Role
+	s := config.DB.Where("name = ?", "super-admin").First(&role)
+	if s.Error != nil {
+		return nil, s.Error
+	}
+
 	staff_role := models.StaffRole{
 		UserID:         user.ID,
-		RoleID:         user.RoleID,
+		RoleID:         role.ID,
 		OrganizationID: organization.ID,
 	}
 	sr := config.DB.Create(&staff_role)
@@ -71,13 +76,11 @@ func InviteToOrganiztion(req *requests.SendInviteRequest, organizationId *string
 
 	app_url := os.Getenv("APP_URL")
 
-	fmt.Println(app_url + invite.ID)
-
 	go mails.SendInviteMail(
 		req.Email,
 		"Invite to GOPM",
 		org.Name,
-		app_url+invite.ID,
+		app_url+"/auth/acceptInvite/"+invite.ID,
 	)
 	return nil
 

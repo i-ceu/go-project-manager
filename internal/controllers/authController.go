@@ -53,6 +53,23 @@ func SignIn(c *gin.Context) {
 
 }
 
+func SignInToOrganization(c *gin.Context) {
+	userID, _ := c.MustGet("userID").(string)
+	organizationId := c.Param("organizationId")
+
+	organization, token, err := services.SignInToOrganization(userID, organizationId)
+	if err != nil {
+		helpers.ResError(c, 403, err.Error(), nil)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Signed in Successfuly",
+		"user":    organization,
+		"token":   token,
+	})
+}
+
 func AcceptInvite(c *gin.Context) {
 	var req requests.AcceptInviteRequest
 	c.Bind(&req)

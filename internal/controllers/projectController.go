@@ -1,23 +1,14 @@
 package controllers
 
 import (
-	"time"
-
 	"github.com/gin-gonic/gin"
-	"github.com/i-ceu/go-project-manager/internal/config"
-	"github.com/i-ceu/go-project-manager/internal/enums"
 	"github.com/i-ceu/go-project-manager/internal/helpers"
-	"github.com/i-ceu/go-project-manager/internal/models"
+	"github.com/i-ceu/go-project-manager/internal/requests"
+	"github.com/i-ceu/go-project-manager/internal/services"
 )
 
 func CreateProject(c *gin.Context) {
-	var req struct {
-		Title        string `validate:"required"`
-		Tag          string `validate:"required"`
-		Description  string `validate:"required"`
-		Status       string
-		DeliveryDate string `validate:"required"`
-	}
+	var req requests.CreateProjectRequest
 	c.Bind(&req)
 	err := helpers.ValidateReq(req)
 	if err != nil {
@@ -26,30 +17,14 @@ func CreateProject(c *gin.Context) {
 		})
 		return
 	}
-	dueDate, err := time.Parse(enums.Date_format, req.DeliveryDate)
+	project, err := services.CreateProject(&req)
 	if err != nil {
-		c.JSON(422, gin.H{
-			"message": "Invalid date format",
-		})
-		return
-	}
-
-	project := models.Project{
-		Title:        req.Title,
-		Tag:          req.Tag,
-		Description:  req.Description,
-		Status:       req.Status,
-		DeliveryDate: dueDate,
-	}
-
-	test := config.DB.Create(&project)
-	if test.Error != nil {
-		helpers.ResError(c, 400, test.Error, nil)
-		return
+		helpers.ResError(c, 400, "error creating project", err.Error())
 	}
 	c.JSON(201, gin.H{
 		"message": "New Project Created",
 		"Project": gin.H{
+			"Id":           project.ID,
 			"Title":        project.Title,
 			"Tag":          project.Tag,
 			"Description":  project.Description,
@@ -62,30 +37,24 @@ func CreateProject(c *gin.Context) {
 
 func GetProject(c *gin.Context) {
 	id := c.Param("id")
-	var project models.Project
 
-	result := config.DB.Preload("Tasks.Project").Preload("Tasks.Assigner").Preload("Tasks.AssignedTo").Preload("Tasks").First(&project, id)
-	if result.Error != nil {
-		c.JSON(404, gin.H{
-			"message": "No project found with this Id",
-		})
-		return
+	project, err := services.GetProject(&id)
+	if err != nil {
+		helpers.ResError(c, 400, "error creating project", err.Error())
 	}
+
 	c.JSON(200, gin.H{
 		"project": project,
 	})
 
 }
 
-func GetAllProjects(c *gin.Context) {
-	var projects []models.Project
+func GetAllProjects(c *gin.Context) { //refactor to
+	id := c.Param("organizationId")
 
-	result := config.DB.Find(&projects)
-	if result.Error != nil {
-		c.JSON(404, gin.H{
-			"message": "Error retrieving projects",
-		})
-		return
+	projects, err := services.GetAllProjects(&id)
+	if err != nil {
+		helpers.ResError(c, 400, "error creating project", err.Error())
 	}
 	c.JSON(200, gin.H{
 		"projects": projects,

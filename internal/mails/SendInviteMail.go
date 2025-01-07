@@ -1,7 +1,6 @@
 package mails
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 
@@ -20,8 +19,6 @@ func SendInviteMail(
 		OrganizationName: organizationName,
 		Link:             template.URL(link),
 	}
-
-	fmt.Println(link)
 
 	templateFile := "../../internal/templates/invite.html"
 	err := helpers.DeliverMail(templateFile, values, recipient, subject)

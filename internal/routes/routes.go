@@ -24,34 +24,46 @@ func RegisterRoutes() {
 		{
 			auth.POST("/registerUser", controllers.RegisterUser)
 			auth.POST("/signin", controllers.SignIn)
-			auth.POST("/acceptInvite/:id", controllers.AcceptInvite)
+			auth.GET("/acceptInvite/:id", controllers.AcceptInvite)
 			auth.GET("/verify/:id", controllers.VerifyAccount)
 		}
+
+		v1.POST("/organization/register", middleware.Guest(), controllers.RegisterOrganization)
+		v1.GET("/organization/:organizationId/signin", middleware.Guest(), controllers.SignInToOrganization)
 
 		//organization
 		organization := v1.Group("/organization")
 		organization.Use(middleware.Auth())
 		{
 			organization.POST("/invite/:id", controllers.InviteToOrganiztion)
-			organization.POST("/register", middleware.CheckRole("admin"), controllers.RegisterOrganization)
 		}
 
+		//projects
+		projects := v1.Group("/projects")
+		projects.Use(middleware.Auth())
+		{
+			projects.POST("/", middleware.CheckRole("admin"), controllers.CreateProject)
+			projects.GET("all/:organizationId", controllers.GetAllProjects)
+			projects.GET("/:id", controllers.GetProject)
+		}
+
+		//sprints
+		sprint := v1.Group("/sprint")
+		sprint.Use(middleware.Auth())
+		{
+			sprint.POST("/create", controllers.CreateSprint)
+		}
+
+		//tasks
 		tasks := v1.Group("/tasks")
 		tasks.Use(middleware.Auth())
 		{
-			tasks.POST("/", middleware.CheckRole("PM"), controllers.CreateTask)
+			tasks.POST("/", middleware.CheckRole("admin"), controllers.CreateTask)
 			tasks.PUT("/assignTask/:id", controllers.AssignTask)
 			tasks.PUT("/updateTask/:id", controllers.UpdateTask)
 			tasks.GET("/:id", controllers.GetTask)
 		}
 
-		projects := v1.Group("/projects")
-		projects.Use(middleware.Auth())
-		{
-			projects.GET("/", controllers.GetAllProjects)
-			projects.POST("/", middleware.CheckRole("PM"), controllers.CreateProject)
-			projects.GET("/:id", controllers.GetProject)
-		}
 	}
 
 	r.Run()

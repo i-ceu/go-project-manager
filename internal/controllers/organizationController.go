@@ -19,8 +19,8 @@ func RegisterOrganization(c *gin.Context) {
 		return
 	}
 	var user models.User
-	userID := c.Param("userID")
-	config.DB.Find(&user, userID).First(&user)
+	userID := c.MustGet("userID").(string)
+	config.DB.Where("id=?", userID).First(&user)
 
 	organization, err := services.CreateOrganization(&req, &user)
 	if err != nil {

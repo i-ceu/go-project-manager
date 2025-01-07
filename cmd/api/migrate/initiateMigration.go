@@ -19,6 +19,7 @@ func main() {
 	config.DB.AutoMigrate(&models.Role{})
 	config.DB.AutoMigrate(&models.StaffRole{})
 	config.DB.AutoMigrate(&models.Invite{})
+	config.DB.AutoMigrate(&models.Sprint{})
 
 	migrations.DropOrganizationFromUsersTable()
 }

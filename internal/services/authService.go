@@ -23,22 +23,14 @@ func RegisterUser(req *requests.RegisterUserRequest) (*models.User, error) {
 
 	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
-	var role models.Role
-
-	s := config.DB.Where("name = ?", "super-admin").First(&role)
-	if s.Error != nil {
-		return nil, s.Error
-	}
-
 	user := models.User{
 		Firstname: req.Firstname,
 		Lastname:  req.Lastname,
 		Email:     req.Email,
 		Password:  string(hashPassword),
-		RoleID:    role.ID,
 	}
 
-	result := config.DB.Preload("Role").Create(&user)
+	result := config.DB.Create(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -58,7 +50,7 @@ func RegisterUser(req *requests.RegisterUserRequest) (*models.User, error) {
 
 func SignIn(req *requests.SignInRequest) (*models.User, string, error) {
 	var user models.User
-	existingUser := config.DB.Preload("Role").Where("email", req.Email).First(&user)
+	existingUser := config.DB.Preload("StaffRoles").Preload("StaffRoles.Role").Preload("StaffRoles.Organization").Where("email", req.Email).First(&user)
 
 	if existingUser.RowsAffected == 0 {
 		return nil, "", errors.New("account doesn't exist")
@@ -74,12 +66,24 @@ func SignIn(req *requests.SignInRequest) (*models.User, string, error) {
 
 	}
 
-	token, err := helpers.CreateJWT(user.ID, user.Role.Name)
+	token, err := helpers.CreateJWT(user.ID, "nil")
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &user, token, nil
+}
 
+func SignInToOrganization(userId string, organizationId string) (*models.StaffRole, string, error) {
+	var staffRole models.StaffRole
+	result := config.DB.Preload("Role").Where("user_id = ? AND organization_id = ?", userId, organizationId).First(&staffRole)
+	if result.Error != nil {
+		return nil, "", errors.New("no organization with this id")
+	}
+	token, err := helpers.CreateJWT(userId, staffRole.Role.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &staffRole, token, nil
 }
 
 func AcceptInvite(req *requests.AcceptInviteRequest, id *string) (*models.User, error) {
@@ -93,8 +97,18 @@ func AcceptInvite(req *requests.AcceptInviteRequest, id *string) (*models.User, 
 		Lastname:  invite.Lastname,
 		Email:     invite.Email,
 		Password:  string(hashPassword),
-		RoleID:    invite.RoleID,
 		Status:    "verified",
+	}
+
+	staff_role := models.StaffRole{
+		UserID:         user.ID,
+		RoleID:         invite.RoleID,
+		OrganizationID: invite.OrganizationID,
+	}
+	sr := config.DB.Create(&staff_role)
+
+	if sr.Error != nil {
+		return nil, sr.Error
 	}
 
 	config.DB.Delete(&invite)
@@ -103,11 +117,6 @@ func AcceptInvite(req *requests.AcceptInviteRequest, id *string) (*models.User, 
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	// go mails.SendWelcomeMail(
-	// 	user.Email,
-	// 	"Welcome to GOPM",
-	// 	invite.Firstname+" "+invite.Lastname)
 
 	return &user, nil
 }
