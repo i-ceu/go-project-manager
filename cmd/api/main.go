@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ubaniIsaac/go-project-manager/internal/config"
-	"github.com/ubaniIsaac/go-project-manager/internal/routes"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/routes"
 )
 
 func init() {

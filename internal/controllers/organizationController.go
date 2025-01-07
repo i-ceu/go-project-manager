@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/ubaniIsaac/go-project-manager/internal/config"
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
-	"github.com/ubaniIsaac/go-project-manager/internal/models"
-	"github.com/ubaniIsaac/go-project-manager/internal/requests"
-	"github.com/ubaniIsaac/go-project-manager/internal/services"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/models"
+	"github.com/i-ceu/go-project-manager/internal/requests"
+	"github.com/i-ceu/go-project-manager/internal/services"
 )
 
 func RegisterOrganization(c *gin.Context) {

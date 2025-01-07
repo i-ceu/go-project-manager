@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/ubaniIsaac/go-project-manager/internal/controllers"
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
-	"github.com/ubaniIsaac/go-project-manager/internal/middleware"
+	"github.com/i-ceu/go-project-manager/internal/controllers"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/middleware"
 )
 
 //list all api routes from
@@ -25,6 +25,7 @@ func RegisterRoutes() {
 			auth.POST("/registerUser", controllers.RegisterUser)
 			auth.POST("/signin", controllers.SignIn)
 			auth.POST("/acceptInvite/:id", controllers.AcceptInvite)
+			auth.GET("/verify/:id", controllers.VerifyAccount)
 		}
 
 		//organization

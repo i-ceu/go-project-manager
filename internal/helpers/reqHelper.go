@@ -2,9 +2,9 @@ package helpers
 
 import (
 	"github.com/go-playground/validator/v10"
-	"github.com/ubaniIsaac/go-project-manager/internal/config"
-	"github.com/ubaniIsaac/go-project-manager/internal/enums"
-	"github.com/ubaniIsaac/go-project-manager/internal/models"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/enums"
+	"github.com/i-ceu/go-project-manager/internal/models"
 )
 
 func ValidateReq(req interface{}) error {

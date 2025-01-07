@@ -3,7 +3,7 @@ package mails
 import (
 	"log"
 
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
 )
 
 func SendAssignTaskMail(

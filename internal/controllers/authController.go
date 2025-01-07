@@ -3,9 +3,9 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
-	"github.com/ubaniIsaac/go-project-manager/internal/requests"
-	"github.com/ubaniIsaac/go-project-manager/internal/services"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/requests"
+	"github.com/i-ceu/go-project-manager/internal/services"
 )
 
 func RegisterUser(c *gin.Context) {
@@ -70,5 +70,14 @@ func AcceptInvite(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Account created",
 		"user":    user,
+	})
+}
+func VerifyAccount(c *gin.Context) {
+
+	id := c.Param("id")
+	response, _ := services.VerifyAccount(&id)
+
+	c.JSON(200, gin.H{
+		"message": response,
 	})
 }

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ubaniIsaac/go-project-manager/internal/config"
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
-	"github.com/ubaniIsaac/go-project-manager/internal/mails"
-	"github.com/ubaniIsaac/go-project-manager/internal/models"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/mails"
+	"github.com/i-ceu/go-project-manager/internal/models"
 	"gorm.io/gorm/clause"
 )
 

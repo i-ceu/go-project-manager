@@ -2,9 +2,10 @@ package mails
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
 )
 
 func SendInviteMail(
@@ -14,10 +15,10 @@ func SendInviteMail(
 	link string) error {
 	values := struct {
 		OrganizationName string
-		Link             string
+		Link             template.URL
 	}{
 		OrganizationName: organizationName,
-		Link:             link,
+		Link:             template.URL(link),
 	}
 
 	fmt.Println(link)

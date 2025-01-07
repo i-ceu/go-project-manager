@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ubaniIsaac/go-project-manager/internal/config"
-	"github.com/ubaniIsaac/go-project-manager/internal/mails"
-	"github.com/ubaniIsaac/go-project-manager/internal/models"
-	"github.com/ubaniIsaac/go-project-manager/internal/requests"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/mails"
+	"github.com/i-ceu/go-project-manager/internal/models"
+	"github.com/i-ceu/go-project-manager/internal/requests"
 )
 
 func CreateOrganization(req *requests.CreateOrganizationRequest, user *models.User) (*models.Organization, error) {
@@ -53,7 +53,7 @@ func InviteToOrganiztion(req *requests.SendInviteRequest, organizationId *string
 	var org models.Organization
 	result := config.DB.Find(&org, organizationId)
 	if result.Error != nil {
-		return errors.New("No organization with this id")
+		return errors.New("no organization with this id")
 	}
 
 	invite := models.Invite{

@@ -1,21 +1,24 @@
 package mails
 
 import (
+	"html/template"
 	"log"
 
-	"github.com/ubaniIsaac/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
 )
 
 func SendWelcomeMail(
 	recipient string,
 	subject string,
-	name string) error {
+	name string,
+	link string) error {
 	values := struct {
 		Name string
+		Link template.URL
 	}{
 		Name: name,
+		Link: template.URL(link),
 	}
-
 	templateFile := "../../internal/templates/welcome.html"
 
 	err := helpers.DeliverMail(templateFile, values, recipient, subject)

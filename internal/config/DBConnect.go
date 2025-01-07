@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -12,10 +13,17 @@ var DB *gorm.DB
 
 func ConnectToDB() {
 	var err error
-	dsn := os.Getenv("DB_URL")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASS")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	db_name := os.Getenv("DB_NAME")
+
+	dsn := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + db_name + "?charset=utf8mb4&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		// DisableForeignKeyConstraintWhenMigrating: true,
 	})
+	fmt.Println("Database connected")
 	if err != nil {
 		log.Fatal("failed to connect to DB")
 	}
