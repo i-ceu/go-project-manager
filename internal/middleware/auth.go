@@ -7,29 +7,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/i-ceu/go-project-manager/internal/config"
+	"github.com/i-ceu/go-project-manager/internal/helpers"
+	"github.com/i-ceu/go-project-manager/internal/models"
 )
 
 func Auth() gin.HandlerFunc {
 
 	var secret = []byte(os.Getenv("jwtSecret"))
-	type MyClaims struct {
-		Role   string `json:"role"`
-		UserID string `json:"userID"`
-		jwt.RegisteredClaims
-	}
 
 	return func(c *gin.Context) {
-		// Get the authorization header
 		authHeader := c.GetHeader("Authorization")
 
-		// Check if the authorization header is missing
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
 			c.Abort()
 			return
 		}
 
-		// Check if the authorization header has the correct format (Bearer <token>)
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
@@ -37,11 +32,9 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
-		// Extract the token from the authorization header
 		tokenString := parts[1]
 
-		// Parse and validate the JWT token
-		token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &helpers.MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return secret, nil
 		})
 		if err != nil || !token.Valid {
@@ -50,15 +43,14 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
-		// Set the user ID from the token claims into the request context for further processing
-		claims, ok := token.Claims.(*MyClaims)
+		claims, ok := token.Claims.(*helpers.MyClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to extract token claims"})
 			c.Abort()
 		}
 
 		c.Set("userID", claims.UserID)
-		c.Set("role", claims.Role)
+		c.Set("teamID", claims.TeamID)
 
 		c.Next()
 	}
@@ -73,17 +65,14 @@ func Guest() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		// Get the authorization header
 		authHeader := c.GetHeader("Authorization")
 
-		// Check if the authorization header is missing
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
 			c.Abort()
 			return
 		}
 
-		// Check if the authorization header has the correct format (Bearer <token>)
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
@@ -91,10 +80,8 @@ func Guest() gin.HandlerFunc {
 			return
 		}
 
-		// Extract the token from the authorization header
 		tokenString := parts[1]
 
-		// Parse and validate the JWT token
 		token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return secret, nil
 		})
@@ -104,7 +91,6 @@ func Guest() gin.HandlerFunc {
 			return
 		}
 
-		// Set the user ID from the token claims into the request context for further processing
 		claims, ok := token.Claims.(*MyClaims)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to extract token claims"})
@@ -117,16 +103,49 @@ func Guest() gin.HandlerFunc {
 	}
 }
 
-func CheckRole(role string) gin.HandlerFunc {
+func CheckRole(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userRole, _ := c.Get("role")
-		if userRole != role {
-			if userRole != "super-admin" {
-				c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
-				c.Abort()
-				return
+
+		userID, exists := c.Get("userID")
+		teamID, exists := c.Get("teamID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "No claims found"})
+			c.Abort()
+			return
+		}
+
+		// jwtClaims := claims.(*helpers.MyClaims)
+
+		var memberRole models.MemberRole
+		err := config.DB.Preload("Role").Where("user_id = ? AND team_id = ?",
+			userID, teamID).First(&memberRole).Error
+
+		if err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "User not authorized for this team"})
+			c.Abort()
+			return
+		}
+
+		roleAllowed := false
+		for _, role := range allowedRoles {
+			if memberRole.Role.Name == "super-admin" {
+				roleAllowed = true
+				break
+			} else if memberRole.Role.Name == role {
+				roleAllowed = true
+				break
 			}
 		}
+
+		if !roleAllowed {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
+			c.Abort()
+			return
+		}
+
+		c.Set("userRole", memberRole.Role)
+		c.Set("teamID", teamID)
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

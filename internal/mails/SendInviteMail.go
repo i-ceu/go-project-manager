@@ -10,14 +10,14 @@ import (
 func SendInviteMail(
 	recipient string,
 	subject string,
-	organizationName string,
+	teamName string,
 	link string) error {
 	values := struct {
-		OrganizationName string
-		Link             template.URL
+		TeamName string
+		Link     template.URL
 	}{
-		OrganizationName: organizationName,
-		Link:             template.URL(link),
+		TeamName: teamName,
+		Link:     template.URL(link),
 	}
 
 	templateFile := "../../internal/templates/invite.html"

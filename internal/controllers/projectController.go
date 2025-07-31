@@ -10,6 +10,7 @@ import (
 func CreateProject(c *gin.Context) {
 	var req requests.CreateProjectRequest
 	c.Bind(&req)
+	teamId := c.Param("teamId")
 	err := helpers.ValidateReq(req)
 	if err != nil {
 		c.JSON(422, gin.H{
@@ -17,30 +18,35 @@ func CreateProject(c *gin.Context) {
 		})
 		return
 	}
-	project, err := services.CreateProject(&req)
+	project, err := services.CreateProject(&req, teamId)
 	if err != nil {
 		helpers.ResError(c, 400, "error creating project", err.Error())
+		return
 	}
+
 	c.JSON(201, gin.H{
 		"message": "New Project Created",
 		"Project": gin.H{
-			"Id":           project.ID,
-			"Title":        project.Title,
-			"Tag":          project.Tag,
-			"Description":  project.Description,
-			"Status":       project.Status,
-			"DeliveryDate": project.DeliveryDate,
+			"id":           project.ID,
+			"title":        project.Title,
+			"tag":          project.Tag,
+			"description":  project.Description,
+			"status":       project.Status,
+			"deliveryDate": project.DeliveryDate,
+			"startDate":    project.StartDate,
+			"workFlow":     project.WorkFlow,
 		},
 	})
 
 }
 
 func GetProject(c *gin.Context) {
-	id := c.Param("id")
+	projectId := c.Param("projectId")
 
-	project, err := services.GetProject(&id)
+	project, err := services.GetProject(&projectId)
 	if err != nil {
-		helpers.ResError(c, 400, "error creating project", err.Error())
+		helpers.ResError(c, 400, "false", err.Error())
+		return
 	}
 
 	c.JSON(200, gin.H{
@@ -50,11 +56,12 @@ func GetProject(c *gin.Context) {
 }
 
 func GetAllProjects(c *gin.Context) { //refactor to
-	id := c.Param("organizationId")
+	id := c.Param("teamId")
 
 	projects, err := services.GetAllProjects(&id)
 	if err != nil {
 		helpers.ResError(c, 400, "error creating project", err.Error())
+		return
 	}
 	c.JSON(200, gin.H{
 		"projects": projects,

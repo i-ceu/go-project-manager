@@ -19,7 +19,7 @@ func SetupLogging() *os.File {
 
 	log.SetOutput(logFile)
 
-	// fmt.Println(log.Lshortfile())
+	// log.Lshortfile())
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 
 	return logFile

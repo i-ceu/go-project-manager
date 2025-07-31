@@ -10,20 +10,21 @@ import (
 	"github.com/i-ceu/go-project-manager/internal/mails"
 	"github.com/i-ceu/go-project-manager/internal/models"
 	"github.com/i-ceu/go-project-manager/internal/requests"
-	"gorm.io/gorm/clause"
 )
 
-func CreateTask(req *requests.CreateTaskRequest, userID string) (*models.Task, error) {
+func CreateTask(req *requests.CreateTaskRequest, userID string, projectId string) (*models.Task, error) {
 
 	var project models.Project
 	var sprint models.Sprint
-	err := checkProject(&project, req.ProjectId)
+	err := checkProject(&project, projectId)
 	if err != nil {
 		return nil, errors.New("no project with Id")
 	}
 	tag := generateTaskTag(&project, 0)
 
-	err = checkSprint(&sprint, req.SprintID)
+	if len(req.SprintID) != 0 {
+		err = checkSprint(&sprint, req.SprintID)
+	}
 	if err != nil {
 		return nil, errors.New("invalid sprint id")
 	}
@@ -49,11 +50,10 @@ func CreateTask(req *requests.CreateTaskRequest, userID string) (*models.Task, e
 		Description:  req.Description,
 		Status:       req.Status,
 		StartDate:    startDate,
+		ProjectID:    projectId,
 		EndDate:      endDate,
-		ProjectID:    req.ProjectId,
 		SprintID:     req.SprintID,
 		CreatedByID:  userID,
-		AssignerID:   req.Assigner,
 		AssignedToID: req.AssignedTo,
 	}
 
@@ -78,13 +78,28 @@ func GetTask(id string) (*models.Task, error) {
 	return &task, nil
 }
 
-func UpdateTask(req *requests.UpdateTaskRequest, id string) (*models.Task, error) {
-	var task models.Task
-	err := checkTask(&task, id)
-	if err != nil {
+func GetAllTasks(projectId string) (*[]models.Task, error) {
+	var tasks []models.Task
+
+	result := config.DB.Preload("Sprint").Preload("AssignedTo").Where("project_id = ?", projectId).Find(&tasks)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &tasks, nil
+}
+
+func UpdateTask(req *requests.UpdateTaskRequest, taskId string) (*models.Task, error) {
+	// Check if task exists
+	var existingTask models.Task
+	if err := config.DB.First(&existingTask, "id = ?", taskId).Error; err != nil {
 		return nil, errors.New("no task with Id")
 	}
+
 	var startDate, endDate time.Time
+	var err error
+
 	if len(req.StartDate) != 0 {
 		startDate, err = time.Parse(enums.Date_format, req.StartDate)
 		if err != nil {
@@ -98,27 +113,47 @@ func UpdateTask(req *requests.UpdateTaskRequest, id string) (*models.Task, error
 			return nil, errors.New("invalid date format")
 		}
 	}
-	result := config.DB.Model(&task).Updates(models.Task{
-		Title:       req.Title,
-		Description: req.Description,
-		StartDate:   startDate,
-		EndDate:     endDate,
-		Status:      req.Status})
-	if result.Error != nil {
+
+	// Create a map for updates to avoid zero-value issues
+	updates := make(map[string]interface{})
+	if req.Title != "" {
+		updates["title"] = req.Title
+	}
+	if req.Description != "" {
+		updates["description"] = req.Description
+	}
+	if req.Status != "" {
+		updates["status"] = req.Status
+	}
+	if !startDate.IsZero() {
+		updates["start_date"] = startDate
+	}
+	if !endDate.IsZero() {
+		updates["end_date"] = endDate
+	}
+
+	// Update using map instead of struct
+	if err := config.DB.Model(&existingTask).Updates(updates).Error; err != nil {
 		return nil, errors.New("error updating task")
 	}
 
-	getTasksDetails(&task)
+	// Get fresh instance with preloaded associations
+	var updatedTask models.Task
+	if err := config.DB.Preload("Assigner").Preload("AssignedTo").Preload("Project").
+		First(&updatedTask, "id = ?", taskId).Error; err != nil {
+		return nil, errors.New("error loading updated task")
+	}
 
-	return &task, nil
+	return &updatedTask, nil
 }
 
-func AssignTask(req *requests.AssignTaskRequest, id string) (*models.Task, error) {
+func AssignTask(req *requests.AssignTaskRequest, taskId string, userId string) (*models.Task, error) {
 
 	var task models.Task
 	var user models.User
+	var assigner models.User
 
-	err := checkTask(&task, id)
+	err := checkTask(&task, taskId)
 	if err != nil {
 		return nil, err
 	}
@@ -128,21 +163,34 @@ func AssignTask(req *requests.AssignTaskRequest, id string) (*models.Task, error
 		return nil, err
 	}
 
-	result := config.DB.Model(&task).Update("AssignedTo", &user)
+	err = checkUser(&assigner, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := config.DB.Model(&models.Task{}).Where("id = ?", taskId).Updates(map[string]interface{}{
+		"assigned_to_id": user.ID,
+	})
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	err = config.DB.Preload("Assigner").Preload("AssignedTo").Where("id = ?", taskId).First(&task).Error
+	if err != nil {
+		return nil, err
+	}
+
+	assignerName := assigner.Firstname + " " + assigner.Lastname
 
 	go mails.SendAssignTaskMail(
 		user.Email,
 		"Task Assigned to you",
-		task.Title, task.Assigner.Firstname+" "+task.Assigner.Lastname)
+		task.Title, assignerName)
 
 	return &task, nil
 }
 
 func checkTask(task *models.Task, id string) error {
-	result := config.DB.Preload(clause.Associations).Find(&task, id)
+	result := config.DB.Preload("Assigner").Preload("AssignedTo").Preload("Project").Preload("CreatedBy").Preload("Sprint").Where("id = ?", id).First(&task)
 	if result.RowsAffected == 0 {
 		return errors.New("no task with this ID")
 	}
@@ -156,7 +204,7 @@ func checkProject(project *models.Project, id string) error {
 	return nil
 }
 func checkUser(user *models.User, id string) error {
-	result := config.DB.Find(&user, id)
+	result := config.DB.Where("id = ?", id).First(&user)
 	if result.RowsAffected == 0 {
 		return errors.New("now user with id")
 	}
@@ -170,8 +218,8 @@ func checkSprint(sprint *models.Sprint, id string) error {
 	return nil
 }
 func getTasksDetails(t *models.Task) {
-	config.DB.Model(&t).Preload("Assigner").Preload("AssignedTo").Preload("Project").
-		First(&t)
+	config.DB.Preload("Assigner").Preload("AssignedTo").Preload("Project").
+		First(t, "id = ?", t.ID)
 }
 
 func generateTaskTag(project *models.Project, start int) string {

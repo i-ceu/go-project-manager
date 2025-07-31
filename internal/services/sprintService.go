@@ -10,7 +10,7 @@ import (
 	"github.com/i-ceu/go-project-manager/internal/requests"
 )
 
-func CreateSprint(req *requests.CreateSprintRequest, user *models.User) (*models.Sprint, error) {
+func CreateSprint(req *requests.CreateSprintRequest, userId string, projectId string) (*models.Sprint, error) {
 	var startDate, endDate time.Time
 	var err error
 	if len(req.StartDate) != 0 {
@@ -27,13 +27,16 @@ func CreateSprint(req *requests.CreateSprintRequest, user *models.User) (*models
 		}
 	}
 
+	var user models.User
+	config.DB.Find(&user, userId).First(&user)
+
 	sprint := models.Sprint{
 		Name:        req.Name,
 		StartDate:   startDate,
 		EndDate:     endDate,
 		Status:      "pending",
-		CreatedByID: user.ID,
-		ProjectID:   req.Project,
+		CreatedByID: userId,
+		ProjectID:   projectId,
 	}
 
 	spr := config.DB.Create(&sprint)

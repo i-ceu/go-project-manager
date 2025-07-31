@@ -53,11 +53,11 @@ func SignIn(c *gin.Context) {
 
 }
 
-func SignInToOrganization(c *gin.Context) {
+func SignInToTeam(c *gin.Context) {
 	userID, _ := c.MustGet("userID").(string)
-	organizationId := c.Param("organizationId")
+	teamId := c.Param("teamId")
 
-	organization, token, err := services.SignInToOrganization(userID, organizationId)
+	team, token, err := services.SignInToTeam(userID, teamId)
 	if err != nil {
 		helpers.ResError(c, 403, err.Error(), nil)
 		return
@@ -65,7 +65,7 @@ func SignInToOrganization(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Signed in Successfuly",
-		"user":    organization,
+		"user":    team,
 		"token":   token,
 	})
 }
@@ -80,19 +80,24 @@ func AcceptInvite(c *gin.Context) {
 		})
 		return
 	}
-	id := c.Param("id")
+	inviteId := c.Param("inviteId")
 
-	user, _ := services.AcceptInvite(&req, &id)
+	user, err := services.AcceptInvite(&req, &inviteId)
+	if err != nil {
+		helpers.ResError(c, 404, err.Error(), nil)
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"message": "Account created",
-		"user":    user,
+		"user":    *user,
 	})
 }
+
 func VerifyAccount(c *gin.Context) {
 
-	id := c.Param("id")
-	response, _ := services.VerifyAccount(&id)
+	verificationId := c.Param("verificationId")
+	response, _ := services.VerifyAccount(&verificationId)
 
 	c.JSON(200, gin.H{
 		"message": response,

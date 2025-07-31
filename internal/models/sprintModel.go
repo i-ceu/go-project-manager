@@ -9,7 +9,7 @@ type Sprint struct {
 	StartDate   time.Time `json:"startDate" gorm:"type:datetime;default:NULL"`
 	EndDate     time.Time `json:"endDate" gorm:"type:datetime;default:NULL"`
 	ProjectID   string    `json:"-"`
-	Project     Project   `gorm:"constraint:OnDelete:SET NULL;"`
+	Project     *Project  `json:"project,omitempty" gorm:"constraint:OnDelete:SET NULL;"`
 	CreatedByID string    `json:"-"`
-	CreatedBy   User      `gorm:"constraint:OnDelete:SET NULL;"`
+	CreatedBy   *User     `json:"createdBy,omitempty" gorm:"constraint:OnDelete:SET NULL;"`
 }

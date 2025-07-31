@@ -13,13 +13,13 @@ type Task struct {
 	StartDate    time.Time `json:"startDate" gorm:"type:datetime;default:NULL"`
 	EndDate      time.Time `json:"endDate" gorm:"type:datetime;default:NULL"`
 	ProjectID    string    `json:"-"`
-	Project      Project   `gorm:"constraint:OnDelete:SET NULL;"`
+	Project      *Project  `json:"project,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:ProjectID;references:ID"`
 	SprintID     string    `json:"-" gorm:"default:NULL"`
-	Sprint       Project   `gorm:"constraint:OnDelete:SET NULL;"`
+	Sprint       *Sprint   `json:"sprint,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:SprintID;references:ID"`
 	CreatedByID  string    `json:"-"`
-	CreatedBy    User      `gorm:"constraint:OnDelete:SET NULL;"`
+	CreatedBy    *User     `json:"created_by,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
 	AssignerID   string    `json:"-" gorm:"default:NULL"`
-	Assigner     User      `gorm:"constraint:OnDelete:SET NULL;"`
+	Assigner     *User     `json:"assigned_by" gorm:"constraint:OnDelete:SET NULL;foreignKey:AssignerID;references:ID"`
 	AssignedToID string    `json:"-" gorm:"default:NULL"`
-	AssignedTo   User      `gorm:"constraint:OnDelete:SET NULL;"`
+	AssignedTo   *User     `json:"assigned_to" gorm:"constraint:OnDelete:SET NULL;foreignKey:AssignedToID;references:ID"`
 }
