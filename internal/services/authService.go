@@ -50,7 +50,7 @@ func RegisterUser(req *requests.RegisterUserRequest) (*models.User, error) {
 
 func SignIn(req *requests.SignInRequest) (*models.User, string, error) {
 	var user models.User
-	existingUser := config.DB.Preload("StaffRoles").Preload("StaffRoles.Role").Preload("StaffRoles.Organization").Where("email", req.Email).First(&user)
+	existingUser := config.DB.Preload("MemberRoles").Preload("MemberRoles.Role").Preload("MemberRoles.Team").Where("email", req.Email).First(&user)
 
 	if existingUser.RowsAffected == 0 {
 		return nil, "", errors.New("account doesn't exist")
@@ -73,57 +73,9 @@ func SignIn(req *requests.SignInRequest) (*models.User, string, error) {
 	return &user, token, nil
 }
 
-func SignInToOrganization(userId string, organizationId string) (*models.StaffRole, string, error) {
-	var staffRole models.StaffRole
-	result := config.DB.Preload("Role").Where("user_id = ? AND organization_id = ?", userId, organizationId).First(&staffRole)
-	if result.Error != nil {
-		return nil, "", errors.New("no organization with this id")
-	}
-	token, err := helpers.CreateJWT(userId, staffRole.Role.Name)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &staffRole, token, nil
-}
-
-func AcceptInvite(req *requests.AcceptInviteRequest, id *string) (*models.User, error) {
-	var invite models.Invite
-	config.DB.Find(&invite, id).First(&invite)
-
-	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-
-	user := models.User{
-		Firstname: invite.Firstname,
-		Lastname:  invite.Lastname,
-		Email:     invite.Email,
-		Password:  string(hashPassword),
-		Status:    "verified",
-	}
-
-	staff_role := models.StaffRole{
-		UserID:         user.ID,
-		RoleID:         invite.RoleID,
-		OrganizationID: invite.OrganizationID,
-	}
-	sr := config.DB.Create(&staff_role)
-
-	if sr.Error != nil {
-		return nil, sr.Error
-	}
-
-	config.DB.Delete(&invite)
-
-	result := config.DB.Create(&user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return &user, nil
-}
-
-func VerifyAccount(id *string) (string, error) {
+func VerifyAccount(verificationId *string) (string, error) {
 	var user models.User
-	existingUser := config.DB.Find(&user, id).First(&user)
+	existingUser := config.DB.Find(&user, verificationId).First(&user)
 
 	if existingUser.RowsAffected == 0 {
 		return "", errors.New("account doesn't exist")

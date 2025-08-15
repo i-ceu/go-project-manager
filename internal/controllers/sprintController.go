@@ -2,17 +2,15 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/i-ceu/go-project-manager/internal/config"
 	"github.com/i-ceu/go-project-manager/internal/helpers"
-	"github.com/i-ceu/go-project-manager/internal/models"
 	"github.com/i-ceu/go-project-manager/internal/requests"
 	"github.com/i-ceu/go-project-manager/internal/services"
 )
 
 func CreateSprint(c *gin.Context) {
 	var req requests.CreateSprintRequest
-
 	c.Bind(&req)
+	userID, _ := c.MustGet("userID").(string)
 	err := helpers.ValidateReq(req)
 	if err != nil {
 		c.JSON(422, gin.H{
@@ -20,17 +18,15 @@ func CreateSprint(c *gin.Context) {
 		})
 		return
 	}
-	var user models.User
-	userID := c.Param("userID")
-	config.DB.Find(&user, userID).First(&user)
+	projectId := c.Param("projectId")
 
-	sprint, err := services.CreateSprint(&req, &user)
+	sprint, err := services.CreateSprint(&req, userID, projectId)
 	if err != nil {
 		helpers.ResError(c, 403, err.Error(), nil)
 		return
 	}
 
-	helpers.Ok(c, 201, "Organization registered successfully", sprint)
+	helpers.Ok(c, 201, "Sprint Created", sprint)
 
 }
 

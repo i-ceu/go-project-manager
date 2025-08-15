@@ -14,12 +14,13 @@ func main() {
 	config.DB.AutoMigrate(&models.User{})
 	config.DB.AutoMigrate(&models.Task{})
 	config.DB.AutoMigrate(&models.Project{})
-	config.DB.AutoMigrate(&models.Organization{})
+	config.DB.AutoMigrate(&models.Team{})
 	config.DB.AutoMigrate(&models.Token{})
 	config.DB.AutoMigrate(&models.Role{})
-	config.DB.AutoMigrate(&models.StaffRole{})
+	config.DB.AutoMigrate(&models.MemberRole{})
 	config.DB.AutoMigrate(&models.Invite{})
 	config.DB.AutoMigrate(&models.Sprint{})
 
-	migrations.DropOrganizationFromUsersTable()
+	migrations.DropTeamFromUsersTable()
+	migrations.DropEmailFromTeamTable()
 }

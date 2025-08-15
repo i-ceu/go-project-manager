@@ -17,7 +17,7 @@ func SeedRoles(db *gorm.DB) error {
 			Name: "admin",
 		},
 		{
-			Name: "employee",
+			Name: "member",
 		},
 	}
 

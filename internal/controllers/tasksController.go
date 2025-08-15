@@ -12,6 +12,7 @@ func CreateTask(c *gin.Context) {
 	var req requests.CreateTaskRequest
 	c.Bind(&req)
 	userID, _ := c.MustGet("userID").(string)
+	projectId := c.Param("projectId")
 	err := helpers.ValidateReq(req)
 	if err != nil {
 		c.JSON(422, gin.H{
@@ -20,9 +21,10 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 
-	task, err := services.CreateTask(&req, userID)
+	task, err := services.CreateTask(&req, userID, projectId)
 	if err != nil {
 		helpers.ResError(c, 400, "error creating project", err.Error())
+		return
 	}
 
 	c.JSON(201, gin.H{
@@ -36,10 +38,26 @@ func GetTask(c *gin.Context) {
 	task, err := services.GetTask(id)
 	if err != nil {
 		helpers.ResError(c, 400, "error creating project", err.Error())
+		return
 	}
 
 	c.JSON(200, gin.H{
 		"task": task,
+	})
+}
+
+func GetAllTasks(c *gin.Context) {
+	projectId := c.Param("projectId")
+	userId := c.Query("user")
+
+	task, err := services.GetAllTasks(projectId, userId)
+	if err != nil {
+		helpers.ResError(c, 400, "error fetching project", err.Error())
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"tasks": task,
 	})
 }
 
@@ -53,9 +71,17 @@ func AssignTask(c *gin.Context) {
 		})
 		return
 	}
-	id := c.Param("id")
+	taskId := c.Param("taskId")
+	userId, _ := c.MustGet("userID").(string)
 
-	task, err := services.AssignTask(&req, id)
+	task, err := services.AssignTask(&req, taskId, userId)
+	if err != nil {
+		c.JSON(422, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
 		"message": "Task assigned to " + task.AssignedTo.Firstname + " " + task.AssignedTo.Lastname,
 		"task":    task,
@@ -72,11 +98,12 @@ func UpdateTask(c *gin.Context) {
 		})
 		return
 	}
-	id := c.Param("id")
+	taskId := c.Param("taskId")
 
-	task, err := services.UpdateTask(&req, id)
+	task, err := services.UpdateTask(&req, taskId)
 	if err != nil {
 		helpers.ResError(c, 400, "error creating project", err.Error())
+		return
 	}
 
 	c.JSON(200, gin.H{

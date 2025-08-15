@@ -6,20 +6,20 @@ import (
 
 type Task struct {
 	Base
-	Title        string    `json:"title"`
-	Tag          string    `json:"tag" gorm:"not null"`
-	Description  string    `json:"description"`
-	Status       string    `json:"status" gorm:"default: todo"`
-	StartDate    time.Time `json:"startDate" gorm:"type:datetime;default:NULL"`
-	EndDate      time.Time `json:"endDate" gorm:"type:datetime;default:NULL"`
-	ProjectID    string    `json:"-"`
-	Project      Project   `gorm:"constraint:OnDelete:SET NULL;"`
-	SprintID     string    `json:"-" gorm:"default:NULL"`
-	Sprint       Project   `gorm:"constraint:OnDelete:SET NULL;"`
-	CreatedByID  string    `json:"-"`
-	CreatedBy    User      `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignerID   string    `json:"-" gorm:"default:NULL"`
-	Assigner     User      `gorm:"constraint:OnDelete:SET NULL;"`
-	AssignedToID string    `json:"-" gorm:"default:NULL"`
-	AssignedTo   User      `gorm:"constraint:OnDelete:SET NULL;"`
+	Title        string     `json:"title"`
+	Tag          string     `json:"tag" gorm:"not null"`
+	Description  string     `json:"description"`
+	Status       string     `json:"status" gorm:"default: todo"`
+	StartDate    *time.Time `json:"startDate" gorm:"type:datetime;default:NULL"`
+	EndDate      *time.Time `json:"endDate" gorm:"type:datetime;default:NULL"`
+	ProjectID    string     `json:"-"`
+	Project      *Project   `json:"project,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:ProjectID;references:ID"`
+	SprintID     string     `json:"-" gorm:"default:NULL"`
+	Sprint       *Sprint    `json:"sprint,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:SprintID;references:ID"`
+	CreatedByID  string     `json:"-"`
+	CreatedBy    *User      `json:"created_by,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
+	AssignerID   string     `json:"-" gorm:"default:NULL"`
+	Assigner     *User      `json:"assigned_by" gorm:"constraint:OnDelete:SET NULL;foreignKey:AssignerID;references:ID"`
+	AssignedToID string     `json:"-" gorm:"default:NULL"`
+	AssignedTo   *User      `json:"assigned_to" gorm:"constraint:OnDelete:SET NULL;foreignKey:AssignedToID;references:ID"`
 }
