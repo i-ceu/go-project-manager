@@ -32,8 +32,8 @@ func CreateSprint(req *requests.CreateSprintRequest, userId string, projectId st
 
 	sprint := models.Sprint{
 		Name:        req.Name,
-		StartDate:   startDate,
-		EndDate:     endDate,
+		StartDate:   &startDate,
+		EndDate:     &endDate,
 		Status:      "pending",
 		CreatedByID: userId,
 		ProjectID:   projectId,

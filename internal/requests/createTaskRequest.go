@@ -2,7 +2,6 @@ package requests
 
 type CreateTaskRequest struct {
 	Title       string `validate:"required"`
-	Tag         string
 	Description string `validate:"required"`
 	SprintID    string
 	StartDate   string

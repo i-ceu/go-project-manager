@@ -48,15 +48,16 @@ func GetTask(c *gin.Context) {
 
 func GetAllTasks(c *gin.Context) {
 	projectId := c.Param("projectId")
+	userId := c.Query("user")
 
-	task, err := services.GetAllTasks(projectId)
+	task, err := services.GetAllTasks(projectId, userId)
 	if err != nil {
 		helpers.ResError(c, 400, "error fetching project", err.Error())
 		return
 	}
 
 	c.JSON(200, gin.H{
-		"task": task,
+		"tasks": task,
 	})
 }
 

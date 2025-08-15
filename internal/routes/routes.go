@@ -59,6 +59,8 @@ func RegisterRoutes() {
 				projects.POST("/", middleware.CheckRole("admin"), controllers.CreateProject)
 				projects.GET("/", controllers.GetAllProjects)
 				projects.GET("/:projectId", controllers.GetProject)
+				projects.GET("/generateTasks/:projectId", middleware.CheckRole("super-admin"), controllers.GenerateTasks)
+				projects.DELETE("/reset/:projectId", middleware.CheckRole("super-admin"), controllers.ResetProject)
 
 				//sprints
 				sprint := projects.Group("/:projectId/sprint")

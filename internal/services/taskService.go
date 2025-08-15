@@ -10,6 +10,7 @@ import (
 	"github.com/i-ceu/go-project-manager/internal/mails"
 	"github.com/i-ceu/go-project-manager/internal/models"
 	"github.com/i-ceu/go-project-manager/internal/requests"
+	"gorm.io/gorm"
 )
 
 func CreateTask(req *requests.CreateTaskRequest, userID string, projectId string) (*models.Task, error) {
@@ -29,28 +30,37 @@ func CreateTask(req *requests.CreateTaskRequest, userID string, projectId string
 		return nil, errors.New("invalid sprint id")
 	}
 
-	var startDate, endDate time.Time
+	var startDate, endDate *time.Time
 	if len(req.StartDate) != 0 {
-		startDate, err = time.Parse(enums.Date_format, req.StartDate)
+		parsedStart, err := time.Parse(enums.Date_format, req.StartDate)
 		if err != nil {
 			return nil, errors.New("invalid date format")
 		}
+		startDate = &parsedStart
 	}
 
 	if len(req.EndDate) != 0 {
-		endDate, err = time.Parse(enums.Date_format, req.EndDate)
+		parsedEnd, err := time.Parse(enums.Date_format, req.EndDate)
 		if err != nil {
 			return nil, errors.New("invalid date format")
 		}
+		startDate = &parsedEnd
+	}
+
+	var status string
+	if len(req.Status) == 0 {
+		status = project.WorkFlow[0]
+	} else {
+		status = req.Status
 	}
 
 	task := models.Task{
 		Title:        req.Title,
 		Tag:          tag,
 		Description:  req.Description,
-		Status:       req.Status,
-		StartDate:    startDate,
+		Status:       status,
 		ProjectID:    projectId,
+		StartDate:    startDate,
 		EndDate:      endDate,
 		SprintID:     req.SprintID,
 		CreatedByID:  userID,
@@ -78,10 +88,18 @@ func GetTask(id string) (*models.Task, error) {
 	return &task, nil
 }
 
-func GetAllTasks(projectId string) (*[]models.Task, error) {
+func GetAllTasks(projectId string, userId string) (*[]models.Task, error) {
 	var tasks []models.Task
-
-	result := config.DB.Preload("Sprint").Preload("AssignedTo").Where("project_id = ?", projectId).Find(&tasks)
+	var result *gorm.DB
+	if userId == "unassigned" {
+		result = config.DB.Preload("Sprint").Preload("AssignedTo").Where("project_id = ?", projectId).
+			Where("assigned_to_id IS NULL").
+			Find(&tasks)
+	} else if userId != "" {
+		result = config.DB.Preload("Sprint").Preload("AssignedTo").Where("project_id = ? AND assigned_to_id = ?", projectId, userId).Find(&tasks)
+	} else {
+		result = config.DB.Preload("Sprint").Preload("AssignedTo").Where("project_id = ?", projectId).Find(&tasks)
+	}
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -91,7 +109,6 @@ func GetAllTasks(projectId string) (*[]models.Task, error) {
 }
 
 func UpdateTask(req *requests.UpdateTaskRequest, taskId string) (*models.Task, error) {
-	// Check if task exists
 	var existingTask models.Task
 	if err := config.DB.First(&existingTask, "id = ?", taskId).Error; err != nil {
 		return nil, errors.New("no task with Id")

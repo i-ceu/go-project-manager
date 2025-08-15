@@ -35,14 +35,15 @@ func (w StringWorkflow) Value() (driver.Value, error) {
 
 type Project struct {
 	Base
-	Title        string         `json:"title" gorm:"not null"`
-	Tag          string         `json:"tag" gorm:"not null"`
-	Description  string         `json:"description" gorm:"not null"`
-	Status       string         `json:"status" gorm:"default: in-progress"`
-	StartDate    time.Time      `json:"startDate"`
-	DeliveryDate time.Time      `json:"deliveryDate"`
-	WorkFlow     StringWorkflow `json:"workflow" gorm:"type:text"`
-	TeamID       string         `json:"-"`
-	Team         *Team          `json:"team,omitempty" gorm:"constraint:OnDelete:SET NULL;"`
-	Tasks        []Task         `json:"tasks"`
+	Title            string         `json:"title" gorm:"not null"`
+	Tag              string         `json:"tag" gorm:"not null"`
+	Description      string         `json:"description" gorm:"not null"`
+	Status           string         `json:"status" gorm:"default: in-progress"`
+	StartDate        *time.Time     `json:"startDate"`
+	DeliveryDate     *time.Time     `json:"deliveryDate"`
+	WorkFlow         StringWorkflow `json:"workflow" gorm:"type:text"`
+	TeamID           string         `json:"-"`
+	Team             *Team          `json:"team,omitempty" gorm:"constraint:OnDelete:SET NULL;"`
+	Tasks            []Task         `json:"tasks"`
+	TasksAIGenerated bool           `json:"tasks_ai_generated" gorm:"default: 0"`
 }

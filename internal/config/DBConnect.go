@@ -22,6 +22,7 @@ func ConnectToDB() {
 	dsn := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + db_name + "?charset=utf8mb4&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		// DisableForeignKeyConstraintWhenMigrating: true,
+		// Logger: logger.Default.LogMode(logger.Info),
 	})
 	fmt.Println("Database connected")
 	if err != nil {
