@@ -2,10 +2,8 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/i-ceu/go-project-manager/internal/config"
@@ -111,12 +109,13 @@ func GetProject(projectId *string, userIds []string, search *string) (*models.Pr
 			)
 		}
 
+		// fmt.Println("test: ", &project)
 		return db
 	}).
 		First(&project, projectId)
 
 	if result.Error != nil {
-		return nil, errors.New("no project with this Id")
+		return nil, errors.New(result.Error.Error())
 	}
 
 	return &project, nil
@@ -145,6 +144,7 @@ func GenerateTasks(projectId *string, userId string) (string, error) {
 	base_prompt, err := os.ReadFile("query-method.md")
 	if err != nil {
 		return "fail", err
+
 	}
 
 	prompt := string(base_prompt) + " " + project.Title + ". " + project.Description
@@ -159,9 +159,11 @@ func GenerateTasks(projectId *string, userId string) (string, error) {
 		return "fail", err
 	}
 
-	numWorkers := 10
+	// numWorkers := 10
 
-	bulkInsertTasks(taskInserts, numWorkers, userId, project.ID)
+	// fmt.Println("inserts", taskInserts)
+
+	bulkInsertTasks(taskInserts, userId, project.ID)
 	config.DB.Model(&project).Update("tasks_ai_generated", true)
 	return "Success", nil
 
@@ -196,25 +198,24 @@ func insertTasksRecord(record requests.GroqTasksResponse, userId string, project
 	return "Creating Tasks in progress", nil
 }
 
-func bulkInsertTasks(records []requests.GroqTasksResponse, numWorkers int, userId string, projectId string) {
-	jobs := make(chan requests.GroqTasksResponse, len(records))
-	var wg sync.WaitGroup
+func bulkInsertTasks(records []requests.GroqTasksResponse, userId string, projectId string) {
+	// jobs := make(chan requests.GroqTasksResponse, len(records))
+	// var wg sync.WaitGroup
 
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func(workerID int) {
-			defer wg.Done()
-			for record := range jobs {
-				fmt.Printf("Worker %d processing: %s\n", workerID, record.TaskTitle)
-				insertTasksRecord(record, userId, projectId)
-			}
-		}(i)
-	}
-
+	// for i := 0; i < numWorkers; i++ {
+	// wg.Add(1)
+	// go func(workerID int) {
+	// 	defer wg.Done()
 	for _, record := range records {
-		jobs <- record
+		insertTasksRecord(record, userId, projectId)
 	}
-	close(jobs)
+	// }(i)
+	// }
 
-	wg.Wait()
+	// for _, record := range records {
+	// 	jobs <- record
+	// }
+	// close(jobs)
+
+	// wg.Wait()
 }

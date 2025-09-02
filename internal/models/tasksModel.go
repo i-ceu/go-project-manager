@@ -10,8 +10,8 @@ type Task struct {
 	Tag          string     `json:"tag" gorm:"not null"`
 	Description  string     `json:"description"`
 	Status       string     `json:"status" gorm:"default: todo"`
-	StartDate    *time.Time `json:"startDate" gorm:"type:datetime;default:NULL"`
-	EndDate      *time.Time `json:"endDate" gorm:"type:datetime;default:NULL"`
+	StartDate    *time.Time `json:"startDate" gorm:"default:NULL"`
+	EndDate      *time.Time `json:"endDate" gorm:"default:NULL"`
 	ProjectID    string     `json:"-"`
 	Project      *Project   `json:"project,omitempty" gorm:"constraint:OnDelete:SET NULL;foreignKey:ProjectID;references:ID"`
 	SprintID     string     `json:"-" gorm:"default:NULL"`
