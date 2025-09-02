@@ -41,7 +41,7 @@ type Project struct {
 	Status           string         `json:"status" gorm:"default: in-progress"`
 	StartDate        *time.Time     `json:"startDate"`
 	DeliveryDate     *time.Time     `json:"deliveryDate"`
-	WorkFlow         StringWorkflow `json:"workflow" gorm:"type:text"`
+	WorkFlow         StringWorkflow `json:"workflow" gorm:"type:jsonb"`
 	TeamID           string         `json:"-"`
 	Team             *Team          `json:"team,omitempty" gorm:"constraint:OnDelete:SET NULL;"`
 	Tasks            []Task         `json:"tasks"`

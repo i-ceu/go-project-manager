@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -19,14 +19,17 @@ func ConnectToDB() {
 	port := os.Getenv("DB_PORT")
 	db_name := os.Getenv("DB_NAME")
 
-	dsn := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + db_name + "?charset=utf8mb4&parseTime=True&loc=Local"
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		host, user, password, db_name, port)
+
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		// DisableForeignKeyConstraintWhenMigrating: true,
 		// Logger: logger.Default.LogMode(logger.Info),
 	})
-	fmt.Println("Database connected")
+
 	if err != nil {
 		log.Fatal("failed to connect to DB")
 	}
 
+	fmt.Println("Database connected")
 }
