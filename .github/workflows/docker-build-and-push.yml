@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build-and-push:
@@ -20,10 +20,10 @@ jobs:
     
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/your-go-service:latest .
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/your-go-service:${{ github.sha }} .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/go-pm-service:latest .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/go-pm-service:${{ github.sha }} .
     
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/your-go-service:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/your-go-service:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/go-pm-service:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/go-pm-service:${{ github.sha }}
