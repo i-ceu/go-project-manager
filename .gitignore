@@ -3,3 +3,4 @@ gin-bin.exe
 server.log
 main.exe
 cmd/api/api.exe
+docker-compose.yml
