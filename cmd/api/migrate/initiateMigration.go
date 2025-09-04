@@ -23,4 +23,5 @@ func main() {
 
 	migrations.DropTeamFromUsersTable()
 	migrations.DropEmailFromTeamTable()
+	migrations.CreateDBIndexes()
 }

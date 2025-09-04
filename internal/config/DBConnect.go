@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -19,12 +20,17 @@ func ConnectToDB() {
 	port := os.Getenv("DB_PORT")
 	db_name := os.Getenv("DB_NAME")
 
+	logLevel := logger.Info
+	if os.Getenv("ENVIRONMENT") == "production" {
+		logLevel = logger.Error // Only errors in production
+	}
+
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		host, user, password, db_name, port)
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		// DisableForeignKeyConstraintWhenMigrating: true,
-		// Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 
 	if err != nil {
