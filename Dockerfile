@@ -31,7 +31,7 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 
 # Copy .env file if you're using one (optional)
-# COPY .env .
+COPY --from=builder /app/query-method.md .
 
 # Expose port (adjust to your service port)
 EXPOSE 8080
